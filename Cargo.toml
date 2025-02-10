@@ -17,5 +17,8 @@ tokio = { version = "1", features = ["full"] }
 tokio-macros = "2.5.0"
 
 [profile.release]
-opt-level = 3
+opt-level = 2
+debug = false
 lto = true
+strip = true
+debug-assertions = false
