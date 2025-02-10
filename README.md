@@ -1,6 +1,5 @@
 # auto_civitai_rs
 
-[![Crates.io](https://img.shields.io/crates/v/auto_civitai_rs.svg)](https://crates.io/crates/auto_civitai_rs)
 [![Docs.rs](https://docs.rs/auto_civitai_rs/badge.svg)](https://docs.rs/auto_civitai_rs)
 [![CI](https://github.com/alpertunga-bile/auto_civitai_rs/workflows/CI/badge.svg)](https://github.com/alpertunga-bile/auto_civitai_rs/actions)
 
