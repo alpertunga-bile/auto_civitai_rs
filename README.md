@@ -1,0 +1,1 @@
+# auto_civitai_rs
