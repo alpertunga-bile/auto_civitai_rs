@@ -1,39 +1,36 @@
-mod civitai_image_struct;
 mod config;
+mod dataset;
 
-use civitai_image_struct::CivitaiImagePage;
-use config::{from_config_to_url, AutoCivitaiConfig};
+use config::{get_config, get_urls_from_config, AutoCivitaiConfig};
+use futures::future;
 use reqwest::get;
-use std::fs;
-
-async fn fetch_data() -> Result<CivitaiImagePage, Box<dyn std::error::Error>> {
-    let body: CivitaiImagePage = get("https://civitai.com/api/v1/images")
-        .await?
-        .json::<CivitaiImagePage>()
-        .await?;
-
-    Ok(body)
-}
-
-use std::io::{Error, ErrorKind};
+use tokio::time::Duration;
 
 #[tokio::main]
-async fn main() -> Result<(), std::io::Error> {
-    let config_file: String = String::from("config.json");
+async fn main() {
+    let config_result = get_config("config.json");
 
-    let is_config_exists: bool = fs::exists(config_file.clone()).is_ok();
-
-    if !is_config_exists {
-        return Err(Error::new(
-            ErrorKind::NotFound,
-            "config.json file is not exists",
-        ));
+    if !config_result.is_ok() {
+        return;
     }
 
-    let config: AutoCivitaiConfig =
-        serde_json::from_str(fs::read_to_string(config_file).unwrap().as_str()).unwrap();
+    let config_file: AutoCivitaiConfig = config_result.ok().unwrap();
 
-    println!("{}", config.period);
+    let urls = get_urls_from_config(&config_file);
 
-    Ok(())
+    let bodies = future::join_all(urls.into_iter().map(|url| async move {
+        tokio::time::sleep(Duration::from_secs(1)).await;
+        get(url).await.unwrap().json::<serde_json::Value>().await
+    }))
+    .await;
+
+    for b in bodies {
+        match b {
+            Ok(b) => println!(
+                "Have {} items",
+                b.get("items").unwrap().as_array().unwrap().len()
+            ),
+            Err(e) => eprintln!("Got an error: {}", e),
+        }
+    }
 }
