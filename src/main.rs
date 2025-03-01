@@ -1,11 +1,13 @@
-mod config;
+#[warn(unused_imports)]
 mod dataset;
+mod utilities;
 
-use config::{get_config, get_urls_from_config, AutoCivitaiConfig};
-use dataset::{get_dataframe, save_dataframe};
-use futures::future;
-use reqwest::get;
-use tokio::time::Duration;
+use utilities::{
+    config::{get_config, AutoCivitaiConfig},
+    enhance_dataset,
+};
+
+use dataset::{get_dataframe, postprocess_dataframe, save_dataframe};
 
 #[tokio::main]
 async fn main() {
@@ -13,30 +15,18 @@ async fn main() {
     let dataset_filepath = "dataset.parquet";
 
     if !config_result.is_ok() {
+        println!("Error with config file");
         return;
     }
 
-    let config_file: AutoCivitaiConfig = config_result.ok().unwrap();
-
-    let urls = get_urls_from_config(&config_file);
+    let config: AutoCivitaiConfig = config_result.ok().unwrap();
 
     let mut df = get_dataframe(dataset_filepath);
+    let created_df = enhance_dataset(&config).await;
 
-    let bodies = future::join_all(urls.into_iter().map(|url| async move {
-        tokio::time::sleep(Duration::from_secs(1)).await;
-        get(url).await.unwrap().json::<serde_json::Value>().await
-    }))
-    .await;
+    df = postprocess_dataframe(df, created_df);
 
-    for b in bodies {
-        match b {
-            Ok(b) => println!(
-                "Have {} items",
-                b.get("items").unwrap().as_array().unwrap().len()
-            ),
-            Err(e) => eprintln!("Got an error: {}", e),
-        }
-    }
+    println!("\n\n\n{}", df);
 
-    save_dataframe(dataset_filepath, &mut df);
+    // save_dataframe(dataset_filepath, &mut df);
 }
