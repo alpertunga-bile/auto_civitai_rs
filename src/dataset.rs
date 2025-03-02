@@ -1,5 +1,4 @@
 use polars::{
-    df,
     frame::UniqueKeepStrategy,
     io::SerReader,
     prelude::{DataFrame, ParquetReader, ParquetWriter},
@@ -13,21 +12,14 @@ pub fn get_dataframe(filepath: &str) -> DataFrame {
         return df;
     }
 
-    let df = df! [
-      "prompt" => [None::<String>],
-      "image_url" => [None::<String>],
-      "base_model" => [None::<String>],
-      "nsfw_level" => [None::<String>],
-      "gen_type" => [None::<String>],
-    ]
-    .unwrap();
+    let df = DataFrame::default();
 
     return df;
 }
 
 pub fn postprocess_dataframe(real_df: DataFrame, created_df: DataFrame) -> DataFrame {
     let mut df = real_df.clone();
-    let image_url_col = [String::from("image_url")];
+    let image_url_col = [String::from("url")];
 
     df = df.vstack(&created_df).unwrap();
     df = df.drop_nulls::<String>(None).unwrap();

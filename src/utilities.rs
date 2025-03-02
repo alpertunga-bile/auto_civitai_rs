@@ -3,13 +3,16 @@ mod prompt_utils;
 
 use config::{get_urls_from_config, AutoCivitaiConfig};
 use kdam::tqdm;
-use prompt_utils::{get_page_image_data, ImageData, ImageDataVals};
+use prompt_utils::{
+    get_page_image_data,
+    image_data::{ImageData, ImageDataValues, ImageDataVectors},
+};
 use rand::prelude::*;
 use reqwest::Client;
 use serde_json::Value;
 use tokio::time::Duration;
 
-use polars::prelude::{Column, DataFrame};
+use polars::prelude::DataFrame;
 
 async fn get_json_bodies(urls: Vec<String>) -> Vec<Result<Value, reqwest::Error>> {
     let client = Client::new();
@@ -96,40 +99,6 @@ async fn get_image_data(
     mul_image_data
 }
 
-fn fill_dataframe(
-    dataframe_data: &Vec<Vec<String>>,
-    columns: &mut Vec<Column>,
-    data_col: ImageDataVals,
-) {
-    let col_index = data_col as usize;
-
-    match data_col {
-        ImageDataVals::PROMPT => columns.push(Column::new(
-            "prompt".into(),
-            dataframe_data[col_index].clone(),
-        )),
-        ImageDataVals::IMAGE_URL => columns.push(Column::new(
-            "image_url".into(),
-            dataframe_data[col_index].clone(),
-        )),
-        ImageDataVals::BASE_MODEL => columns.push(Column::new(
-            "base_model".into(),
-            dataframe_data[col_index].clone(),
-        )),
-        ImageDataVals::NSFW_LEVEL => columns.push(Column::new(
-            "nsfw_level".into(),
-            dataframe_data[col_index].clone(),
-        )),
-        ImageDataVals::GEN_TYPE => columns.push(Column::new(
-            "gen_type".into(),
-            dataframe_data[col_index].clone(),
-        )),
-        ImageDataVals::TOTAL => {
-            panic!("do not use ImageDataVals::TOTAL")
-        }
-    }
-}
-
 pub async fn enhance_dataset(config: &AutoCivitaiConfig) -> DataFrame {
     let urls = get_urls_from_config(&config, 1);
 
@@ -139,39 +108,16 @@ pub async fn enhance_dataset(config: &AutoCivitaiConfig) -> DataFrame {
         return DataFrame::default();
     }
 
-    let total_image_vals = ImageDataVals::TOTAL as usize;
-
-    let mut dataframe_data: Vec<Vec<String>> = Vec::with_capacity(total_image_vals);
-
-    for _ in 0..total_image_vals {
-        dataframe_data.push(Vec::new());
-    }
+    let total_image_vals = ImageDataValues::TotalValues as usize;
+    let mut image_data_values = ImageDataVectors::new(total_image_vals);
 
     for data in tqdm!(
         image_data.into_iter(),
         desc = "Creating dataframe",
         position = 0
     ) {
-        dataframe_data[ImageDataVals::PROMPT as usize].push(data.prompt);
-        dataframe_data[ImageDataVals::IMAGE_URL as usize].push(data.image_url);
-        dataframe_data[ImageDataVals::BASE_MODEL as usize].push(data.base_model);
-        dataframe_data[ImageDataVals::NSFW_LEVEL as usize].push(data.nsfw_level);
-        dataframe_data[ImageDataVals::GEN_TYPE as usize].push(data.gen_type);
+        image_data_values.append(&data);
     }
 
-    let mut columns: Vec<Column> = Vec::with_capacity(total_image_vals);
-
-    fill_dataframe(&dataframe_data, &mut columns, ImageDataVals::PROMPT);
-    fill_dataframe(&dataframe_data, &mut columns, ImageDataVals::IMAGE_URL);
-    fill_dataframe(&dataframe_data, &mut columns, ImageDataVals::BASE_MODEL);
-    fill_dataframe(&dataframe_data, &mut columns, ImageDataVals::NSFW_LEVEL);
-    fill_dataframe(&dataframe_data, &mut columns, ImageDataVals::GEN_TYPE);
-
-    let df = DataFrame::new(columns);
-
-    if df.is_err() {
-        return DataFrame::default();
-    }
-
-    df.ok().unwrap()
+    image_data_values.create_dataframe(total_image_vals)
 }
