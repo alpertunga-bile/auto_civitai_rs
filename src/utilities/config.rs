@@ -10,21 +10,21 @@ pub struct AutoCivitaiConfig {
     pub sort: String,
     pub period: String,
     pub start_page: u16,
+    pub total_pages: u16,
     pub wanted_prompts: Vec<String>,
     pub unwanted_prompts: Vec<String>,
 }
 
-pub fn get_urls_from_config(config: &AutoCivitaiConfig, total_urls: u16) -> Vec<String> {
+pub fn get_urls_from_config(config: &AutoCivitaiConfig) -> Vec<String> {
     let base_url = "https://civitai.com/api/v1/images";
 
-    let mut index: u16 = config.start_page;
+    let mut index = config.start_page;
+    let config_limit = config.limit as u16;
+    let index_limit = config.total_pages * config_limit;
 
-    let mut urls: Vec<String> = vec![];
-    urls.reserve(total_urls as usize);
+    let mut urls: Vec<String> = Vec::with_capacity(config.total_pages as usize);
 
-    let config_limit: u16 = config.limit as u16;
-
-    while index < total_urls {
+    while index < index_limit && index < 50000 {
         let params = [
             ("limit", config.limit.to_string()),
             ("nsfw", config.nsfw.to_string()),

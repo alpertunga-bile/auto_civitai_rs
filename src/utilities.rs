@@ -2,7 +2,6 @@ pub mod config;
 mod prompt_utils;
 
 use config::{get_urls_from_config, AutoCivitaiConfig};
-use kdam::tqdm;
 use prompt_utils::{
     get_page_image_data,
     image_data::{ImageData, ImageDataValues, ImageDataVectors},
@@ -11,6 +10,7 @@ use rand::prelude::*;
 use reqwest::Client;
 use serde_json::Value;
 use tokio::time::Duration;
+use tqdm::tqdm;
 
 use polars::prelude::DataFrame;
 
@@ -29,9 +29,8 @@ async fn get_json_bodies(urls: Vec<String>) -> Vec<Result<Value, reqwest::Error>
              * used microseconds to make it more random
              */
 
-            let _ = tokio::time::sleep(Duration::from_micros(
-                rand::rng().random_range(2000000..5000000),
-            ));
+            let _ =
+                tokio::time::sleep(Duration::from_micros(rand::rng().random_range(0..10000000)));
 
             let response = client.get(url).send().await?;
             response.json::<Value>().await
@@ -42,7 +41,7 @@ async fn get_json_bodies(urls: Vec<String>) -> Vec<Result<Value, reqwest::Error>
 
     let mut results = Vec::with_capacity(handles.len());
 
-    for handle in tqdm!(handles.into_iter(), desc = "Processing URLs") {
+    for handle in tqdm(handles.into_iter()).desc(Some("Processing URLs")) {
         results.push(handle.await.unwrap());
     }
 
@@ -86,7 +85,7 @@ async fn get_image_data(
 
     let mut mul_image_data: Vec<ImageData> = Vec::with_capacity(handles.len());
 
-    for handle in tqdm!(handles.into_iter(), desc = "Processing", position = 0) {
+    for handle in tqdm(handles.into_iter()).desc(Some("Processing")) {
         let mut image_data = handle.await.unwrap();
 
         if image_data.is_empty() {
@@ -100,7 +99,7 @@ async fn get_image_data(
 }
 
 pub async fn enhance_dataset(config: &AutoCivitaiConfig) -> DataFrame {
-    let urls = get_urls_from_config(&config, 1);
+    let urls = get_urls_from_config(&config);
 
     let image_data = get_image_data(urls, &config.wanted_prompts, &config.unwanted_prompts).await;
 
@@ -111,11 +110,7 @@ pub async fn enhance_dataset(config: &AutoCivitaiConfig) -> DataFrame {
     let total_image_vals = ImageDataValues::TotalValues as usize;
     let mut image_data_values = ImageDataVectors::new(total_image_vals);
 
-    for data in tqdm!(
-        image_data.into_iter(),
-        desc = "Creating dataframe",
-        position = 0
-    ) {
+    for data in tqdm(image_data.into_iter()).desc(Some("Creating Dataframe")) {
         image_data_values.append(&data);
     }
 

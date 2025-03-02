@@ -26,7 +26,8 @@ async fn main() {
 
     df = postprocess_dataframe(df, created_df);
 
-    println!("\n\n\n{}", df);
+    save_dataframe(dataset_filepath, &mut df);
 
-    // save_dataframe(dataset_filepath, &mut df);
+    println!("\nDataset is saved | Total Rows : {}", df.shape().0);
+    println!("{}", df.head(Some(5)));
 }
