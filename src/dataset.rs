@@ -22,11 +22,9 @@ pub fn postprocess_dataframe(real_df: DataFrame, created_df: DataFrame) -> DataF
     let image_url_col = [String::from("url")];
 
     df = df.vstack(&created_df).unwrap();
-    df = df.drop_nulls::<String>(None).unwrap();
     df = df
         .unique_stable(Some(&image_url_col), UniqueKeepStrategy::First, None)
         .unwrap();
-    df.align_chunks_par();
 
     df
 }

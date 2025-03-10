@@ -12,7 +12,6 @@ use dataset::{get_dataframe, postprocess_dataframe, save_dataframe};
 #[tokio::main]
 async fn main() {
     let config_result = get_config("config.json");
-    let dataset_filepath = "dataset.parquet";
 
     if !config_result.is_ok() {
         println!("Error with config file");
@@ -21,13 +20,15 @@ async fn main() {
 
     let config: AutoCivitaiConfig = config_result.ok().unwrap();
 
-    let mut df = get_dataframe(dataset_filepath);
+    let mut df = get_dataframe(&config.output);
     let created_df = enhance_dataset(&config).await;
 
     df = postprocess_dataframe(df, created_df);
 
-    save_dataframe(dataset_filepath, &mut df);
+    save_dataframe(&config.output, &mut df);
 
-    println!("\nDataset is saved | Total Rows : {}", df.shape().0);
+    print!("{}", "\n".repeat(4));
+
+    println!("Dataset is saved | Total Rows : {}", df.shape().0);
     println!("{}", df.head(Some(5)));
 }

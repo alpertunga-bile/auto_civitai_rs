@@ -26,7 +26,7 @@ async fn get_json_bodies(urls: Vec<String>) -> Vec<Result<Value, reqwest::Error>
             let mut get_res = client.get(url).send().await;
 
             if get_res.is_err() {
-                for _ in 0..3 {
+                for _ in 0..5 {
                     tokio::time::sleep(tokio::time::Duration::from_millis(1500)).await;
 
                     get_res = client.get(url).send().await;
