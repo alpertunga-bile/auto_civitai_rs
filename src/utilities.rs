@@ -2,15 +2,13 @@ pub mod config;
 mod prompt_utils;
 
 use config::{get_urls_from_config, AutoCivitaiConfig};
+use kdam::tqdm;
 use prompt_utils::{
     get_page_image_data,
-    image_data::{ImageData, ImageDataValues, ImageDataVectors},
+    image_data::{ImageData, ImageDataVectors, IMAGE_DATA_TOTAL_VALUES},
 };
-use rand::prelude::*;
 use reqwest::Client;
 use serde_json::Value;
-use tokio::time::Duration;
-use tqdm::tqdm;
 
 use polars::prelude::DataFrame;
 
@@ -24,16 +22,22 @@ async fn get_json_bodies(urls: Vec<String>) -> Vec<Result<Value, reqwest::Error>
         let client = client.clone();
 
         let future = async move {
-            /*
-             * wait between 2 seconds to 5 seconds
-             * used microseconds to make it more random
-             */
+            let url = url.as_str();
+            let mut get_res = client.get(url).send().await;
 
-            let _ =
-                tokio::time::sleep(Duration::from_micros(rand::rng().random_range(0..10000000)));
+            if get_res.is_err() {
+                for _ in 0..3 {
+                    tokio::time::sleep(tokio::time::Duration::from_millis(1500)).await;
 
-            let response = client.get(url).send().await?;
-            response.json::<Value>().await
+                    get_res = client.get(url).send().await;
+
+                    if get_res.is_ok() {
+                        break;
+                    }
+                }
+            }
+
+            get_res.unwrap().json::<Value>().await
         };
 
         handles.push(tokio::spawn(future));
@@ -41,7 +45,7 @@ async fn get_json_bodies(urls: Vec<String>) -> Vec<Result<Value, reqwest::Error>
 
     let mut results = Vec::with_capacity(handles.len());
 
-    for handle in tqdm(handles.into_iter()).desc(Some("Processing URLs")) {
+    for handle in tqdm!(handles.into_iter(), desc = "Processing URLs", position = 0) {
         results.push(handle.await.unwrap());
     }
 
@@ -85,7 +89,7 @@ async fn get_image_data(
 
     let mut mul_image_data: Vec<ImageData> = Vec::with_capacity(handles.len());
 
-    for handle in tqdm(handles.into_iter()).desc(Some("Processing")) {
+    for handle in tqdm!(handles.into_iter(), desc = "Processing", position = 1) {
         let mut image_data = handle.await.unwrap();
 
         if image_data.is_empty() {
@@ -107,12 +111,15 @@ pub async fn enhance_dataset(config: &AutoCivitaiConfig) -> DataFrame {
         return DataFrame::default();
     }
 
-    let total_image_vals = ImageDataValues::TotalValues as usize;
-    let mut image_data_values = ImageDataVectors::new(total_image_vals);
+    let mut image_data_values = ImageDataVectors::new(IMAGE_DATA_TOTAL_VALUES);
 
-    for data in tqdm(image_data.into_iter()).desc(Some("Creating Dataframe")) {
+    for data in tqdm!(
+        image_data.into_iter(),
+        desc = "Creating Dataframe",
+        position = 2
+    ) {
         image_data_values.append(&data);
     }
 
-    image_data_values.create_dataframe(total_image_vals)
+    image_data_values.create_dataframe(IMAGE_DATA_TOTAL_VALUES)
 }
