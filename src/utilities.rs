@@ -23,11 +23,20 @@ async fn get_json_bodies(urls: Vec<String>) -> Vec<Result<Value, reqwest::Error>
 
         let future = async move {
             let url = url.as_str();
+
+            tokio::time::sleep(tokio::time::Duration::from_millis(rand::random_range(
+                1000..3000,
+            )))
+            .await;
+
             let mut get_res = client.get(url).send().await;
 
             if get_res.is_err() {
                 for _ in 0..5 {
-                    tokio::time::sleep(tokio::time::Duration::from_millis(1500)).await;
+                    tokio::time::sleep(tokio::time::Duration::from_millis(rand::random_range(
+                        1000..3000,
+                    )))
+                    .await;
 
                     get_res = client.get(url).send().await;
 
