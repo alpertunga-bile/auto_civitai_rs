@@ -2,10 +2,10 @@ pub mod image_data;
 mod preprocess;
 
 use image_data::ImageData;
+use kdam::tqdm;
 use preprocess::preprocess;
 use regex::Regex;
 use serde_json::Value;
-use tqdm::tqdm;
 
 fn check_prompt(prompt: &String, word_list: &Vec<String>) -> bool {
     let multi_whitespace_regex = Regex::new(r"\s+").unwrap();
@@ -88,7 +88,7 @@ pub fn get_page_image_data(
 ) -> Vec<ImageData> {
     let mut page_image_data = Vec::with_capacity(items.len());
 
-    for item in tqdm(items.into_iter()).desc(Some("Processing Items")) {
+    for item in tqdm!(items.into_iter(), desc = "Processing Items", position = 2) {
         let mut image_data = get_image_data(item);
 
         if image_data.meta.prompt == "undefined" {

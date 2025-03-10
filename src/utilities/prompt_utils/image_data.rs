@@ -15,28 +15,7 @@ pub struct ImageData {
     pub stats: StatsData,
 }
 
-pub enum ImageDataValues {
-    Prompt = 0,
-    NegativePrompt,
-    Seed,
-    Steps,
-    Sampler,
-    Cfg,
-    ClipSkip,
-    Resources,
-    CivitaiResources,
-    ImageUrl,
-    BaseModel,
-    NsfwLevel,
-    GenType,
-    CryCount,
-    LaughCount,
-    LikeCount,
-    DislikeCount,
-    HeartCount,
-    CommentCount,
-    TotalValues,
-}
+pub static IMAGE_DATA_TOTAL_VALUES: usize = 19;
 
 impl ImageData {
     pub fn new() -> Self {

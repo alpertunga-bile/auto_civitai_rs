@@ -5,6 +5,7 @@ use std::io::{Error, ErrorKind};
 
 #[derive(Serialize, Deserialize)]
 pub struct AutoCivitaiConfig {
+    pub output: String,
     pub limit: u8,
     pub nsfw: String,
     pub sort: String,
@@ -55,8 +56,12 @@ pub fn get_config(filepath: &str) -> Result<AutoCivitaiConfig, std::io::Error> {
         ));
     }
 
-    let config: AutoCivitaiConfig =
+    let mut config: AutoCivitaiConfig =
         serde_json::from_str(fs::read_to_string(config_file).unwrap().as_str()).unwrap();
+
+    if config.output.ends_with(".parquet") == false {
+        config.output.push_str(".parquet");
+    }
 
     Ok(config)
 }
