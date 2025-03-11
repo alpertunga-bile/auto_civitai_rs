@@ -30,7 +30,7 @@ cargo run --release
 
 - Example config file:
 
-```json
+```
 {
   output: "dataset",
   limit: 200,
