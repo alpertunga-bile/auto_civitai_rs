@@ -59,7 +59,7 @@ pub fn get_config(filepath: &str) -> Result<AutoCivitaiConfig, std::io::Error> {
     let mut config: AutoCivitaiConfig =
         serde_json::from_str(fs::read_to_string(config_file).unwrap().as_str()).unwrap();
 
-    if config.output.ends_with(".parquet") == false {
+    if !config.output.ends_with(".parquet") {
         config.output.push_str(".parquet");
     }
 

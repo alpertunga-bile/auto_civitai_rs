@@ -13,7 +13,7 @@ use dataset::{get_dataframe, postprocess_dataframe, save_dataframe};
 async fn main() {
     let config_result = get_config("config.json");
 
-    if !config_result.is_ok() {
+    if config_result.is_err() {
         println!("Error with config file");
         return;
     }

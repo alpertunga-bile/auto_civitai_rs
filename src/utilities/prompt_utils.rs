@@ -7,7 +7,7 @@ use preprocess::preprocess;
 use regex::Regex;
 use serde_json::Value;
 
-fn check_prompt(prompt: &String, word_list: &Vec<String>) -> bool {
+fn check_prompt(prompt: &str, word_list: &[String]) -> bool {
     let multi_whitespace_regex = Regex::new(r"\s+").unwrap();
 
     let processed_prompt = multi_whitespace_regex.replace_all(prompt, " ").to_string();
@@ -21,23 +21,19 @@ fn check_prompt(prompt: &String, word_list: &Vec<String>) -> bool {
         }
     }
 
-    return false;
+    false
 }
 
-fn is_prompt_passed(
-    prompt: &String,
-    wanted_prompts: &Vec<String>,
-    unwanted_prompts: &Vec<String>,
-) -> bool {
-    if check_prompt(prompt, unwanted_prompts) == true {
+fn is_prompt_passed(prompt: &str, wanted_prompts: &[String], unwanted_prompts: &[String]) -> bool {
+    if check_prompt(prompt, unwanted_prompts) {
         return false;
     }
 
-    if check_prompt(prompt, wanted_prompts) == true {
+    if check_prompt(prompt, wanted_prompts) {
         return true;
     }
 
-    return false;
+    false
 }
 
 fn get_parent_from_item(
@@ -46,19 +42,15 @@ fn get_parent_from_item(
 ) -> Option<&serde_json::Map<String, Value>> {
     let parent_val = item.get(parent_name);
 
-    if parent_val.is_none() {
-        return None;
-    }
+    parent_val?;
 
     let parent_obj = parent_val.unwrap().as_object();
 
-    if parent_obj.is_none() {
-        return None;
-    }
+    parent_obj?;
 
     let parent = parent_obj.unwrap();
 
-    return Some(parent);
+    Some(parent)
 }
 
 fn get_image_data(item: &Value) -> ImageData {
@@ -82,20 +74,20 @@ fn get_image_data(item: &Value) -> ImageData {
 }
 
 pub fn get_page_image_data(
-    items: &Vec<Value>,
-    wanted_prompts: &Vec<String>,
-    unwanted_prompts: &Vec<String>,
+    items: &[Value],
+    wanted_prompts: &[String],
+    unwanted_prompts: &[String],
 ) -> Vec<ImageData> {
     let mut page_image_data = Vec::with_capacity(items.len());
 
-    for item in tqdm!(items.into_iter(), desc = "Processing Items", position = 2) {
+    for item in tqdm!(items.iter(), desc = "Processing Items", position = 2) {
         let mut image_data = get_image_data(item);
 
         if image_data.meta.prompt == "undefined" {
             continue;
         }
 
-        if is_prompt_passed(&image_data.meta.prompt, wanted_prompts, unwanted_prompts) == false {
+        if !is_prompt_passed(&image_data.meta.prompt, wanted_prompts, unwanted_prompts) {
             continue;
         }
 
@@ -113,21 +105,21 @@ fn test_check_prompt() {
     let wanted_prompts = vec![String::from("dog"), String::from("cat")];
     let unwanted_prompts = vec![String::from("bug")];
 
-    assert_eq!(true, check_prompt(&prompt, &wanted_prompts));
-    assert_eq!(true, check_prompt(&prompt, &unwanted_prompts));
+    assert!(check_prompt(&prompt, &wanted_prompts));
+    assert!(check_prompt(&prompt, &unwanted_prompts));
 
     prompt = String::from("masterpiece, car, woman, cat, dog");
 
-    assert_eq!(true, check_prompt(&prompt, &wanted_prompts));
-    assert_eq!(false, check_prompt(&prompt, &unwanted_prompts));
+    assert!(check_prompt(&prompt, &wanted_prompts));
+    assert!(!check_prompt(&prompt, &unwanted_prompts));
 
     prompt = String::from("masterpiece");
 
-    assert_eq!(false, check_prompt(&prompt, &wanted_prompts));
-    assert_eq!(false, check_prompt(&prompt, &unwanted_prompts));
+    assert!(!check_prompt(&prompt, &wanted_prompts));
+    assert!(!check_prompt(&prompt, &unwanted_prompts));
 
     prompt = String::from("masterpiece, car, woman, dogcat, catdog");
 
-    assert_eq!(false, check_prompt(&prompt, &wanted_prompts));
-    assert_eq!(false, check_prompt(&prompt, &unwanted_prompts));
+    assert!(!check_prompt(&prompt, &wanted_prompts));
+    assert!(!check_prompt(&prompt, &unwanted_prompts));
 }

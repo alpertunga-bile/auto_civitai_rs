@@ -12,7 +12,7 @@ fn fix_commas(string: String) -> String {
         .replace_all(modified_string.as_str(), ", ")
         .to_string();
 
-    return modified_string;
+    modified_string
 }
 
 pub fn preprocess(prompt: String) -> String {
@@ -39,12 +39,12 @@ pub fn preprocess(prompt: String) -> String {
         .to_string()
         .replace(",", ", ");
 
-    return modified_prompt;
+    modified_prompt
 }
 
 #[test]
 fn test_fix_commas() {
-    let mut prompt = String::from("                              ");
+    let prompt = String::from("                              ");
 
     assert_eq!(" ", fix_commas(prompt));
 }

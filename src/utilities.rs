@@ -63,8 +63,8 @@ async fn get_json_bodies(urls: Vec<String>) -> Vec<Result<Value, reqwest::Error>
 
 async fn get_image_data(
     urls: Vec<String>,
-    wanted_prompts: &Vec<String>,
-    unwanted_prompts: &Vec<String>,
+    wanted_prompts: &[String],
+    unwanted_prompts: &[String],
 ) -> Vec<ImageData> {
     let url_size = urls.len();
 
@@ -73,8 +73,8 @@ async fn get_image_data(
     let mut handles = Vec::with_capacity(url_size);
 
     for body in json_bodies.into_iter() {
-        let wanted = wanted_prompts.clone();
-        let unwanted = unwanted_prompts.clone();
+        let wanted = wanted_prompts.to_owned();
+        let unwanted = unwanted_prompts.to_owned();
 
         match body {
             Ok(body) => {
@@ -112,11 +112,11 @@ async fn get_image_data(
 }
 
 pub async fn enhance_dataset(config: &AutoCivitaiConfig) -> DataFrame {
-    let urls = get_urls_from_config(&config);
+    let urls = get_urls_from_config(config);
 
     let image_data = get_image_data(urls, &config.wanted_prompts, &config.unwanted_prompts).await;
 
-    if image_data.len() == 0 {
+    if image_data.is_empty() {
         return DataFrame::default();
     }
 

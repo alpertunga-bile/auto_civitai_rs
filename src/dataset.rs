@@ -12,9 +12,7 @@ pub fn get_dataframe(filepath: &str) -> DataFrame {
         return df;
     }
 
-    let df = DataFrame::default();
-
-    return df;
+    DataFrame::default()
 }
 
 pub fn postprocess_dataframe(real_df: DataFrame, created_df: DataFrame) -> DataFrame {

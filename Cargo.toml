@@ -19,8 +19,4 @@ regex = "1.11.1"
 kdam = "0.6.2"
 
 [profile.release]
-opt-level = 2
-debug = false
 lto = true
-strip = true
-debug-assertions = false
