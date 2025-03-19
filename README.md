@@ -30,17 +30,17 @@ cargo run --release
 
 - Example config file:
 
-```
+```json
 {
-  output: "dataset",
-  limit: 200,
-  nsfw: "None",
-  sort: "Most Reactions",
-  period: "AllTime",
-  start_page: 0,
-  total_pages: 250,
-  wanted_prompts: ["dog"],
-  unwanted_prompts: ["bad"]
+  "output": "dataset",
+  "limit": 200,
+  "nsfw": "None",
+  "sort": "Most Reactions",
+  "period": "AllTime",
+  "start_page": 0,
+  "total_pages": 250,
+  "wanted_prompts": ["dog"],
+  "unwanted_prompts": ["bad"]
 }
 ```
 
