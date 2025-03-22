@@ -65,3 +65,41 @@ pub fn get_config(filepath: &str) -> Result<AutoCivitaiConfig, std::io::Error> {
 
     Ok(config)
 }
+
+pub fn print_config(config: &AutoCivitaiConfig) {
+    let mut begin = format!("{:-^100}", " Auto Civitai Config Values ");
+    begin.replace_range(0..1, "+");
+    begin.pop();
+    begin.push('+');
+
+    println!("{}", begin);
+
+    println!(
+        r#"
++ output           : {}
++ limit            : {}
++ nsfw             : {}
++ sort             : {}
++ period           : {}
++ start_page       : {}
++ total_pages      : {}
++ wanted_prompts   : {:?}
++ unwanted_prompts : {:?}
+"#,
+        config.output,
+        config.limit,
+        config.nsfw,
+        config.sort,
+        config.period,
+        config.start_page,
+        config.total_pages,
+        config.wanted_prompts,
+        config.unwanted_prompts
+    );
+
+    let mut end = String::from("+");
+    end.push_str("-".repeat(98).as_str());
+    end.push_str("+");
+
+    println!("{}", end);
+}
