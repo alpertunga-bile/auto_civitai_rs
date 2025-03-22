@@ -99,7 +99,7 @@ pub fn print_config(config: &AutoCivitaiConfig) {
 
     let mut end = String::from("+");
     end.push_str("-".repeat(98).as_str());
-    end.push_str("+");
+    end.push('+');
 
     println!("{}", end);
 }
