@@ -72,6 +72,26 @@ impl MetaData {
         }
     }
 
+    fn fill_float_values(&mut self, meta: &serde_json::Map<String, Value>, field_name: &str) {
+        let field_val = meta.get(field_name);
+        let mut data_value: f64 = 0.0;
+
+        if field_val.is_none() {
+            return;
+        }
+
+        let data_opt = field_val.unwrap().as_f64();
+
+        if data_opt.is_some() {
+            data_value = data_opt.unwrap();
+        }
+
+        match field_name {
+            "cfgScale" => self.cfg = data_value,
+            _ => println!("Wrong image meta f64 fieldname"),
+        }
+    }
+
     fn fill_vector_values(&mut self, meta: &serde_json::Map<String, Value>, field_name: &str) {
         let field_val = meta.get(field_name);
 
@@ -96,6 +116,8 @@ impl MetaData {
         self.fill_uint_values(meta, "seed");
         self.fill_uint_values(meta, "steps");
         self.fill_uint_values(meta, "clipSkip");
+
+        self.fill_float_values(meta, "cfgScale");
 
         self.fill_vector_values(meta, "resources");
         self.fill_vector_values(meta, "civitaiResources");
