@@ -3,7 +3,7 @@ mod dataset;
 mod utilities;
 
 use utilities::{
-    config::{get_config, AutoCivitaiConfig},
+    config::{get_config, print_config, AutoCivitaiConfig},
     enhance_dataset,
 };
 
@@ -20,9 +20,17 @@ async fn main() {
 
     let config: AutoCivitaiConfig = config_result.ok().unwrap();
 
-    let mut df = get_dataframe(&config.output);
+    print_config(&config);
+
     let created_df = enhance_dataset(&config).await;
 
+    if created_df.is_empty() {
+        print!("{}", "\n".repeat(4));
+        println!("Can not get new data with specified options, please update them and try again");
+        return;
+    }
+
+    let mut df = get_dataframe(&config.output);
     df = postprocess_dataframe(df, created_df);
 
     save_dataframe(&config.output, &mut df);
