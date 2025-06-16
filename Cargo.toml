@@ -21,7 +21,7 @@ tokio = { version = "1.45.1", features = [
 ] }
 rand = "0.9.1"
 regex = "1.11.1"
-kdam = "0.6.2"
+kdam = "0.6.3"
 
 [profile.release]
 codegen-units = 1
