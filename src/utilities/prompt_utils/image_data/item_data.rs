@@ -28,8 +28,8 @@ impl ItemData {
 
         let data_opt = field_val.unwrap().as_str();
 
-        if data_opt.is_some() {
-            data_value = String::from(data_opt.unwrap());
+        if let Some(value) = data_opt {
+            data_value = String::from(value);
         }
 
         match field_name {

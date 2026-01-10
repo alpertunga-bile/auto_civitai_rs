@@ -32,8 +32,8 @@ impl StatsData {
 
         let data_opt = field_val.unwrap().as_u64();
 
-        if data_opt.is_some() {
-            data_value = data_opt.unwrap();
+        if let Some(value) = data_opt {
+            data_value = value;
         }
 
         match field_name {
